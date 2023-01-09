@@ -4,63 +4,57 @@ from EnergyStor import EnergyStorage
 from Food_class import Food
 from ColdHubs import ColdHubs
 
-
-capacity = 50 # cooling power
-efficiency = 2
-cooling_demand = 5
-temperature = 5
-am_temperature = 30
-storage_capacity =10
-lat =2
-lon =45
+## define EnergySystem "system1"
+capacity = 500 # cooling power [W]
+efficiency = 2 #cop , 200% efficiency
+am_temperature = 30 # ambient temperature [C]
+lat =2 # latitude
+lon =45 # longitude
 start_date = '2019-01-01'
 end_date = '2020-01-01'
-system1 = EnergySystem(capacity, efficiency, cooling_demand, temperature, am_temperature, storage_capacity, lat, lon, start_date, end_date)
+# initialisation of system1
+system1 = EnergySystem(capacity, efficiency, am_temperature, lat, lon, start_date, end_date)
 
 
 
-## get solar data from renewable.ninja
-# solar_data = system1.get_solar()
-# air_temperature_series = solar_data.t2m
-# radiance = solar_data.swgdn
-
-#define energy storage
-batt_capa = 5 *3.6e6 #kWh
+#define EnergyStorage "battery"
+batt_capa = 5 *3.6e6 #kWh --> Joule
 batt_eff = .98 # efficiency
 energy_form = "electricity"
-energy_density = 300 #kWh/m3
+energy_density = 300  #kWh/m3
 energy_cost = 150 #$/kWh
 storage_name = "battery"
 
 battery = EnergyStorage(batt_capa, batt_eff, energy_form, storage_name, energy_density, energy_cost)
 
 
-#defien the food type
+#defien Food "food1"
 food_type = "fruit"
 weight = 400 #kg
 name = "apple"
 heat_capacity =  3.7e3 #J/kgK
-surface_area = .008/.15 #m2/kg
-initial_temperature = am_temperature
-target_temperature = 5 #fridge
+surface_area = .008/.15 #m2/kg [notes] check this data or find more data
+initial_temperature = am_temperature # assum food temperature equals to the ambient temperature
+target_temperature = 5 # could be per food
+max_tem = 8
+min_tem = 3
 shelf_life = 30 #days
 life_remaining = 30 #days
 
 food1 = Food(food_type, weight, name, heat_capacity, surface_area, initial_temperature, target_temperature,
-                 shelf_life, life_remaining)
+                 max_tem, min_tem, shelf_life, life_remaining)
 
 
-solar_area=1 #m2
-#test energy balance function
-# system1.energybalance(solar_area, battery, food1)
+## define solar parameters
+solar_area=10 # solar panel area [m2]
 
-volume = 100#m3
+## define ColdHubs "coldhubs"
+volume = 20 #m3
 u_value = 0.5 #W/m2K
-temperature = 5
-
+temperature = 5 # intial T_hub
 surface_area = 3*3*6 #m2
-
 coldhubs=ColdHubs(volume, u_value, temperature, surface_area)
 
+# assemble everything into the system1
 system1.time_variant_analysis(solar_area, battery, food1, coldhubs)
 

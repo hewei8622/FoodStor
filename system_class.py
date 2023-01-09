@@ -6,20 +6,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 class EnergySystem:
-    def __init__(self, capacity, efficiency, cooling_demand, temperature, am_temperature, storage_capacity, lat, lon, start_date, end_date):
-        self.cooling_power = capacity  # electrical capacity of the system (kW)
-        self.efficiency = efficiency  # Efficiency of the system, namely COP
-        self.temperature = temperature  # The system temperature
-        self.am_temperature = am_temperature # the envioronmental temperature, ambient temperature
-        self.storage_capacity = storage_capacity  # Storage capacity of the system (m3)
-        self.cooling_demand = cooling_demand # system's cooling demand for reducing/maintaining food's storage temperature
-        self.lat = lat
-        self.lon = lon
-        self.start_date = start_date
-        self.end_date = end_date
-        self.coldhubs = []
-        self.energystorage = []
-        self.food = []
+    def __init__(self, capacity, efficiency, am_temperature, lat, lon, start_date, end_date):
+        self.cooling_power = capacity  # electrical capacity of the system (W)
+        self.cop = efficiency  # Efficiency of the system, namely COP
+        # self.temperature = temperature  # The system temperature [K]
+        self.am_temperature = am_temperature # the envioronmental temperature, ambient temperature [K]
+        self.cooling_demand = [] # system's cooling demand for reducing/maintaining food's storage temperature [J]
+        self.lat = lat # latitude
+        self.lon = lon # longitude
+        self.start_date = start_date # date
+        self.end_date = end_date # date
+        self.coldhubs = [] # coldhub class
+        self.energystorage = [] # energystorage class
+        self.food = [] # food class
 
 
     def get_temperature(self):
@@ -63,13 +62,6 @@ class EnergySystem:
         float: Remaining storage capacity of the system (MWh)
         """
         return self.storage_capacity
-
-
-    def get_electrical_energy(self, Q):
-        # Calculate the electrical energy
-        E = Q / self.efficiency
-
-        return E
 
     def get_solar_from_renewable_ninja(self):
 
@@ -213,10 +205,10 @@ class EnergySystem:
 
     def set_solar(self, solar_area):
         print("loading solar power's data")
-        # Generate random solar generation data for a year (8760 hours)
+        # read solar irradiance data for a year (8760 hours) in Nigeria
         solar_data = self.get_solar_from_file('solar_data_2019.csv')
         solar_irr = solar_data['GHI']
-        solar_generation = solar_area * solar_irr * 0.15 * 3600  # solar efficiency is 15%
+        solar_generation = solar_area * solar_irr * 0.15 * 3600  # solar efficiency is 15% and change power (X time in seconds) to energy
         return solar_generation
 
     def time_variant_analysis(self, solar_area, energystorage, food, coldhubs):
@@ -226,68 +218,95 @@ class EnergySystem:
         self.set_food(food)
         self.set_coldhubs(coldhubs)
 
-
-        # Assume the battery has a capacity of 10 kWh and a round-trip efficiency of 0.9
+        #Battery capacity
         battery_capacity = self.energystorage.capacity  # J
+
+        #this is currently not used. It could be accounted in one way, charging or discharging
         battery_efficiency = self.energystorage.energy_efficiency
 
-
+        #length of analysis duration (i.e., 8760 [hours])
         len_data = len(solar_generation)
-        # Initialize the battery and flywheel state of charge (SOC)
+
+
+        # Initialize the battery state of charge (SOC)
         battery_soc = np.zeros(1+len_data)  # kWh
-        battery_soc[0] = 0 #battery_capacity
-        # tes_soc = 0.0  # kWh
+        battery_soc[0] = 0 #battery starts at zeor kWh
+        # battery_soc[0] = battery_capacity #battery starts at the full capacity
+        #this needs to be refined later particulary when cost analysis is added
+        #a min SOC (like 50%) needs to be considered here
 
-        T_food = np.zeros(len_data)
-        T_hub = np.zeros(len_data) #T_hub should be 5 -8 C
-
+        ## initialisation of time-variant variables
+        # the time-variant food temperature
+        T_food = np.zeros(len_data) #t
+        # the air temperature in the coldhub
+        T_hub = np.zeros(len_data) #T_hub should be bounded within a pre-defiend range in the coldhubs class
+        # time-variant cold power provided to the coldhub
         cold_power = np.zeros(len_data)
 
-        # Loop through the solar generation data and simulate the battery charging and discharging
+        # Loop through the solar generation data and simulate the battery charging and discharging, as well as T_food and T_hub
         for i in range(len_data):
 
-            h_conv = 1
+            # the convective heat transfer coeff
+            h_conv = 1 # in W/m2K
+            # heat exchanged between the food to the env
             cold_out = self.food.food_temperature_update(self.coldhubs.temperature, h_conv) #Joule
+            # update T_food
             T_food[i] = self.food.temperature
 
-            if solar_generation[i] > 0:
-                if self.coldhubs.temperature > self.coldhubs.T_hub_max:
+            if solar_generation[i] > 0: # if solar PV is generating power
+                if self.coldhubs.temperature > self.coldhubs.T_hub_max: # if the coldhub is too hot
+                    # enough energy from the combined solar and battery to run the cooling system (in kW_e)
                     if battery_soc[i] + solar_generation[i] > self.cooling_demand*3600:
-                        cold_in = self.cooling_power * 3600
+                        # converting electrical power to thermal/cold power
+                        cold_in = self.cooling_power * 3600 / self.cop
+                        # update battery_soc
                         battery_soc[i+1] = battery_soc[i] - (self.cooling_power * 3600 - solar_generation[i])
-                    else:
+                    else:# not enough energy to run the cooling device
+                        # run the cooling device at a reduced power
                         cold_in = battery_soc[i] + solar_generation[i]
+                        # update battery_soc to the min_soc
                         battery_soc[i+1] = battery_soc[i] - max(0, battery_soc[i])
-                else:
+                else: # if the coldhub is not too hot
+                    # if the coldhub is not too cold
                     if self.coldhubs.temperature > self.coldhubs.T_hub_min:
+                        # the cooling device runs at a reduced power level if there is a solar available
                         cold_in = min(solar_generation[i], self.cooling_power * 3600) # Joule
-                        # T_hub[i] = self.coldhubs.get_air_temperature(cold_in, cold_out, self.am_temperature)
-                        battery_soc[i+1] = min(battery_capacity, battery_soc[i] + max(solar_generation[i] - self.cooling_power*3600, 0))
-                    else:
-                        battery_soc[i+1] = min(battery_capacity, battery_soc[i] + solar_generation[i])
+                        # charge battery using the remaining power if any, and limit battery_soc with the battery_capacity that is soc_max
+                        battery_soc[i+1] = min(battery_capacity, battery_soc[i] + max(solar_generation[i] - self.cooling_power*3600, 0) * battery_efficiency)
+                        # charging efficiency is updated 9 Jan
+                    else: # if the coldhub is too cold, then stop cooling it
+                        battery_soc[i+1] = min(battery_capacity, battery_soc[i] + solar_generation[i] * battery_efficiency)
                         cold_in = 0
 
-            else:
-                if self.coldhubs.temperature > self.coldhubs.T_hub_max:
+            else:# if solar generation is zero
+                if self.coldhubs.temperature > self.coldhubs.T_hub_max:# too hot
+                    # enough energy from battery for a good cooling (at the rated power)
                     if battery_soc[i] > self.cooling_demand*3600:
                         cold_in = self.cooling_power * 3600
                         battery_soc[i+1] = battery_soc[i] - self.cooling_power * 3600
-                    else:
+                    else: # if not enough energy in battery for a good cooling.
+                        # Cooling operates at whatever energy available in battery
                         cold_in = max(battery_soc[i], 0)
+                        # update battery_soc
                         battery_soc[i+1] = battery_soc[i] - max(battery_soc[i], 0)
                 else:
-                    if self.coldhubs.temperature > self.coldhubs.T_hub_min:
-                        cold_in = max(min(battery_soc[i], self.cooling_power * 3600),0) # Joule
-                        # T_hub[i] = self.coldhubs.get_air_temperature(cold_in, cold_out, self.am_temperature)
+                    if self.coldhubs.temperature > self.coldhubs.T_hub_min: # nor too cold or hot
+                        # cooling operates at the rated power or a reduced power due to low battery_soc
+                        # [notes] this could be zero, as T_hub is good to store food at this timestep
+                        cold_in = 0 # max(min(battery_soc[i], self.cooling_power * 3600),0) # Joule
                         battery_soc[i+1] = battery_soc[i] - cold_in
-                    else:
+                    else: #  too cold
                         battery_soc[i+1] = battery_soc[i]
                         cold_in = 0
 
+            # coldhub temperature update
             self.coldhubs.get_air_temperature(cold_in, cold_out, self.am_temperature)
+            # update time-variant variables
             T_hub[i] = self.coldhubs.temperature
             cold_power[i] = cold_in
 
+
+        # plot results
         fig, (ax1, ax2, ax3, ax4) = plt.subplots(4,1)
         # make a little extra space between the subplots
         fig.subplots_adjust(hspace=0.5)

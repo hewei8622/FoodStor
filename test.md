@@ -19,8 +19,27 @@ In the current codes, we have several classes
 - The time-variant temperature tracking is implemented, but need to check the results
 - Now we can do both simple energy balance and temperature variation analysis 
 - The conversion between electricity and cold/thermal doesn't seem right, need to correct
-- 
 
+
+## 9 Jan 2023
+
+### the logic of system.time_variant_analysis()
+
+- T_food and T_hub are tracked at every timestep during the analysis duration, e.g., every hour in a year.
+- The purpose is to make sure the T_hub is bounded within a predefined temperature range, which is good for storing the food defiend in Food. 
+- To meet the T_hub requirement, cold power is provided from combined solar and battery, depending on the solar generation, battery_soc, and T_hub. 
+- The logic to operate battery may be illustrated for clarifying how it works. 
+
+### updates
+- battery charging eff is updated (battery efficiency is considered only in the charging, so the discharhing is assumed to be 100%.)
+- system./cop is updated (electrical power and thermal power conversion is considered)
+
+
+### what need to do
+- check/build a database of food including thermal/mechanical properties, shelf life at different temperatures, preferred storage temperature, HX surface/total surface ratio or similar
+- check/build a cost model of food, which could be as simple as $/kg per each food
+- check/find suitable/credible convective heat transfer coefficients used in the modelling
+- check/build storage cost model
   
 
 
