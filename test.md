@@ -36,13 +36,27 @@ In the current codes, we have several classes
 
 
 ### what need to do
-- check/build a database of food including thermal/mechanical properties, shelf life at different temperatures, preferred storage temperature, HX surface/total surface ratio or similar
-- check/build a cost model of food, which could be as simple as $/kg per each food
-- check/find suitable/credible convective heat transfer coefficients used in the modelling
-- check/build storage cost model
+- [long] check/build a database of food including thermal/mechanical properties, shelf life at different temperatures, preferred storage temperature, HX surface/total surface ratio or similar
+- [long] check/build a cost model of food, which could be as simple as $/kg per each food
+- [long] check/find suitable/credible convective heat transfer coefficients used in the modelling
+- [long] check/build storage cost model
+- [short] need to refine the control timestep from a hour to probably 5 min (there are overshoting and not-converging issues)
+- [long] check conv coeffs 
   
 
+## 10 Jan 2023 
 
+### updates
+- add a food schedule (daily hot food in and cold food out)
+- fix the cop conversion. Now electrical power is considered in the energy flow analysis, cop is considered when the T_hub is updating
+
+### notes 
+- the timestep could not be too big, as the current assumption is a semi-steadystate analysis, so in each timestep, the analysis (like the temperature update) is assumed to be steadystate. By updating in each timestep, a time-series of everything could be obtained.
+
+### what can do
+- add a value chain analysis: the investment for the cold chain vs. the value of the food
+- the shelf life of the food with the storage temperature and time against its time-variant cost
+- an operational research of where to store, what to transport (cold chain or not), and where to charge the cold transport 
 
 
 

@@ -17,14 +17,17 @@ class ColdHubs:
         self.T_hub_max = 8 # upper bound for T_hub
         self.T_hub_min = 3 # lowwer bound for T_hub
 
-    def get_air_temperature(self, cold_in, cold_out, am_tempearture):
+    def get_air_temperature(self, cold_in, cold_out, am_tempearture, res):
         # cold_out -- cold energy absorbed by food stored in teh hub [J]
         # cold_in -- cold energy input to the hub [J]
         # am_temperature -- ambient temperature of the env where the coldhub is placed [C]
-        heat_loss = self.h_conv * self.area * (am_tempearture - self.temperature)
+        heat_loss = self.u_value * self.area * (am_tempearture - self.temperature) * 3600 * res
         dT = (cold_in - cold_out - heat_loss)/(self.air_density * self.volume * self.air_heat_capacity)
 
+
         self.temperature = self.temperature - dT
+
+
 
 
 

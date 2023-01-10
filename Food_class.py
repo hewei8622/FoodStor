@@ -5,7 +5,7 @@ class Food:
         self.weight = weight  # Weight of the food (kg)
         self.name = name  # Name of the food
         self.heat_capacity = heat_capacity  # Heat capacity of the food (J/kg*K)
-        self.surface_area = surface_area  # Surface area of the food (m^2)
+        self.surface_area = surface_area  # Surface area of the food per kg (m^2/kg)
         self.temperature = initial_temperature  # Initial temperature of the food (°C)
         self.target_temperature = target_temperature  # Target storage temperature of the food (°C)
         self.max_tem = max_tem # max storage temperature [C]
@@ -17,8 +17,8 @@ class Food:
         self.life_remaining = life_remaining
 
         # the ratio of the total surface area for heat transfer, i.e., the percentage of surface area is accounted for heat transfer
-        # [notes] needs to check if supoorting data could be found or find a credible way to calculate the heat transfer
-        self.area_coff = .3
+        # [notes] needs to check if supporting data could be found or find a credible way to calculate the heat transfer
+        self.area_coff = 1
 
     def get_cooling_demand(self, am_temperature, h_conv):
 
@@ -33,17 +33,26 @@ class Food:
 
         return Q
 
-    def food_temperature_update(self, hub_temperature, h_conv):
+    def food_temperature_update(self, hub_temperature, h_conv, food_schedule, am_temperature, food_weight, res):
         # hub_temperature -- coldhub's temperature [K]
         # h_conv -- conv heat transfer coeff [W/m2K]
 
-        Q = 3600 * h_conv * self.surface_area * self.weight * self.area_coff * (self.temperature - hub_temperature) #J
 
-        dT = Q / (self.heat_capacity * self.weight) # K or oC does not matter as dT is considered
+        Q = res * 3600 * h_conv * self.surface_area * food_weight * self.area_coff * (self.temperature - hub_temperature) #J
 
-        self.temperature = self.temperature - dT
+            # Q = res * 3600 * h_conv * self.surface_area * food_weight * self.area_coff * (self.temperature - hub_temperature)
+
+
+        dT = Q / (self.heat_capacity * food_weight) # K or oC does not matter as dT is considered
+
+        if food_schedule > 0:
+            self.temperature = ((self.temperature - dT) * (food_weight - food_schedule) + am_temperature * food_schedule) / (food_weight)
+        else:
+            self.temperature = (self.temperature - dT)
 
         return Q
+
+
 
 
 
