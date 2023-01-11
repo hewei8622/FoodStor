@@ -362,7 +362,7 @@ class EnergySystem:
         day = self.time4plot
 
         idx1 = 0
-        idx2 = 3000
+        idx2 = len_data
 
         ax1.plot(day[idx1:idx2], battery_soc[idx1:idx2])
         ax2.plot(day[idx1:idx2], T_hub[idx1:idx2], day[idx1:idx2], self.coldhubs.T_hub_max*np.ones(len(day[idx1:idx2])),'--', day[idx1:idx2], self.coldhubs.T_hub_min*np.ones(len(day[idx1:idx2])),'--')

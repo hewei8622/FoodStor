@@ -59,6 +59,23 @@ In the current codes, we have several classes
 - an operational research of where to store, what to transport (cold chain or not), and where to charge the cold transport 
 
 
+# 11 Jan 2023
+
+## notes
+### to date 
+
+### further development
+- [short-term] could add further functions 
+  - cold energy storage as an additional storage
+  - more complex food inventory and schedules 
+  - cost models 
+
+- [longer term] other info about the value chain of food
+  - how coldhub can improve the value of food (we want to model it. such as analysing the temperature effect on the shelf life and then the value it could represent for farmers)
+  - then, what we may further develop beyond the scope of the project is to model and optimise the planning of solar charging station (if needed) and coldhubs for maximising the value of food/agriculture. 
+    
+
+
 
 
 
