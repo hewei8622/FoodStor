@@ -16,6 +16,8 @@ class ColdHubs:
         ## bounds for T_hub should be determined by the Food's requirement
         self.T_hub_max = 8 # upper bound for T_hub
         self.T_hub_min = 3 # lowwer bound for T_hub
+        print("A ColdHub is initiated")
+
 
     def get_air_temperature(self, cold_in, cold_out, am_tempearture, res):
         # cold_out -- cold energy absorbed by food stored in teh hub [J]
@@ -24,6 +26,10 @@ class ColdHubs:
         heat_loss = self.u_value * self.area * (am_tempearture - self.temperature) * 3600 * res
         dT = (cold_in - cold_out - heat_loss)/(self.air_density * self.volume * self.air_heat_capacity)
 
+        print('at this time step')
+        print(['the input cold power is '+str(cold_in)+' W'])
+        print('the energy loss to the ambient is' + str(heat_loss) +' W')
+        print('the cold abosired by the food is' +str(cold_out) + 'W')
 
         self.temperature = self.temperature - dT
 
