@@ -13,14 +13,14 @@ am_temperature = 30 # ambient temperature [C]
 lat =2 # latitude
 lon =45 # longitude
 start_date = '2019-01-01'
-end_date = '2019-01-11'
+end_date = '2019-01-31'
 # initialisation of system1
 system1 = EnergySystem(capacity, efficiency, am_temperature, lat, lon, start_date, end_date)
 
 
 
 #define EnergyStorage "battery"
-batt_capa = 5 *3.6e6 #kWh --> Joule
+batt_capa = 10 *3.6e6 #kWh --> Joule
 batt_eff = .98 # efficiency
 energy_form = "electricity"
 energy_density = 300  #kWh/m3
@@ -73,7 +73,7 @@ ax1.plot(day[idx1:idx2], battery_soc[idx1+1:idx2]/battery.capacity)
 ax1.set_ylabel('Battery_SOC')
 ax2.plot(day[idx1:idx2], T_hub[idx1:idx2], day[idx1:idx2], system1.coldhubs.T_hub_max*np.ones(len(day[idx1:idx2])),'--', day[idx1:idx2], system1.coldhubs.T_hub_min*np.ones(len(day[idx1:idx2])),'--')
 ax2.set_ylabel('T_hub')
-# ax2.plot(day[idx1:idx2], T_food[idx1:idx2],day[idx1:idx2], system1.coldhubs.T_hub_max*np.ones(len(day[idx1:idx2])),'--', day[idx1:idx2], system1.coldhubs.T_hub_min*np.ones(len(day[idx1:idx2])),'--')
+ax2.plot(day[idx1:idx2], T_food[idx1:idx2],day[idx1:idx2], system1.coldhubs.T_hub_max*np.ones(len(day[idx1:idx2])),'--', day[idx1:idx2], system1.coldhubs.T_hub_min*np.ones(len(day[idx1:idx2])),'--')
 # ax3.set_ylabel('T_food')
 ax3.plot(day[idx1:idx2], solar_generation[idx1:idx2], day[idx1:idx2], cold_in[idx1:idx2], day[idx1:idx2], cold_out[idx1:idx2])
 ax3.set_ylabel('Power')
